@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 class ResultsDF:
 
 #comment for github
-
+# Jaccl commits
     def __init__(self, name = 'unnamed'):
         self.file = easygui.fileopenbox().replace('\\', '/')
         #self.file = 'C:/Users/marta/OneDrive/Escritorio/Data/20210211/Meas4/MSM01_meas2.csv'
