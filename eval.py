@@ -1,8 +1,8 @@
 import pandas as pd
 import easygui
 import matplotlib.pyplot as plt
-class ResultsDF:
 
+class ResultsDF:
 #comment for github
 # Jaccl commits
     def __init__(self, name = 'unnamed'):
@@ -97,50 +97,33 @@ def get_G_average(df):
     for device in deviceList:
         df1 = df[df['device'] == device]
         #print(df1)
-        ResultsDF = ResultsDF.append({'device': device, 'G': df1.G.mean(), 'sterr': df1.G.sem()}, ignore_index=True)
+        ResultsDF = ResultsDF.append({'device': device, 'G': df1.G.mean(), 'G_std': df1.G.std(),
+                                      'G_sterr': df1.G.sem()}, ignore_index=True)
     return ResultsDF
+
+def check_values(df, ev = 8.5e-4, tol = 0.1, rel_std = 0.001):
+    #applied should be applied to dataframes resulting from get_G_average
+    topDevices = [i for i in range(1, 12 + 1)] + [i for i in range(24, 34 + 1)]
+    bottomDevices = [i for i in range(13, 23 + 1)] + [i for i in range(35, 46 + 1)]
+    dfa = get_G_average(df)
+    # top
+    for device in topDevices:
+        G = float(dfa.G[dfa.device == device])
+        std = float(dfa.G_std[dfa.device == device])
+        if (G*(1+tol) > ev) and (G*(1-tol) < ev):
+            print(str(device) + ' is OK')
+        else:
+            print(str(device) + ' is out of range')
+
+        if (std/G < rel_std):
+            print(str(device) + ' noise is OK')
+        else:
+            print(str(device) + ' noise is out of range')
 
 
 if __name__ == "__main__":
     S = ResultsDF('sample_A')
     print(S.df.head())
-
-    #drop dead devices
-    S.df = S.df.loc[(S.df.time > 500)]
-    liveList = S.get_live_devices(cutoff=1e-5)
-    S.df = S.df.loc[(S.df.device.isin(liveList))]
-
-    #split into 3 data frames
-    df1 = S.df.loc[(S.df.time > 500) & (S.df.repeat < 45) & (S.df.device.isin(liveList))]
-    df2 = S.df.loc[(S.df.repeat > 45) & (S.df.repeat < 89) & (S.df.device.isin(liveList))]
-    df3 = S.df.loc[(S.df.repeat > 90) & (S.df.device.isin(liveList))]
-
-    #Get G average for each device
-    av1 = get_G_average(df1)
-    av2 = get_G_average(df2)
-    av3 = get_G_average(df3)
-
-    #percentage
-    pChange = pd.DataFrame()
-    for device in liveList:
-        dt1 = av1[av1.device == device]
-        dt2 = av2[av1.device == device]
-        dt3 = av3[av1.device == device]
-        pChange = pChange.append({'device': device, 'PH7_1': dt1.G.mean(), 'PH4': dt2.G.mean(), 'PH7_2': dt3.G.mean()}, ignore_index=True)
-
-    pChange['start'] = pChange.PH7_1/pChange.PH7_1
-    pChange['7to4'] = pChange.PH4/pChange.PH7_1
-    pChange['4to7'] = pChange.PH7_2/pChange.PH7_1
-
-
-    x = (pChange['7to4']-1)*100
-    plt.hist(x, bins=10)
-
-
-
-
-    print(av1.G.mean())
-    print(av2.G.mean())
-    print(av3.G.mean())
-
-
+    #S.plot_all()
+    #print(S.get_live_devices())
+    #print(S.get_dead_devices())

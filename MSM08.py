@@ -1,6 +1,5 @@
 from eval import *
 
-
 S = ResultsDF('sample_A')
 print(S.df.head())
 
@@ -62,7 +61,7 @@ linestyles = ['-', '--', '-.', ':']
 for device in deviceList:
     x = ['PH7a', 'PH4', 'PH7b']
     y = [float(av1.G[av1.device == device]), float(av2.G[av2.device == device]), float(av3.G[av3.device == device])]
-    yerr = [float(av1.sterr[av1.device == device]), float(av2.sterr[av2.device == device]), float(av3.sterr[av3.device == device])]
+    yerr = [float(av1.G_sterr[av1.device == device]), float(av2.G_sterr[av2.device == device]), float(av3.G_sterr[av3.device == device])]
     ax1.errorbar(x, y, yerr= yerr)
     #plt.legend()
 ax1.set_ylabel('G (S)')

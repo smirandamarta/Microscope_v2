@@ -8,26 +8,38 @@ import time
 import matplotlib.pyplot as plt
 import easygui
 from datetime import datetime
+from pathlib import Path
+from eval import *
 
+def micr_measure(deviceList = [i for i in range(1,47)],
+                 fileName = 'test',
+                 repeats = 5,
+                 Pi_IP_address = '129.94.163.203',
+                 currentVoltagePreAmp_gain = 1E3,
+                 start_end_step = [0,-0.5,0.1],
+                 comment = 'no comment',
+                 testSample = 'no'
+                 ):
 
-if __name__ == '__main__':
-
-    # 1. set parameters
-    Pi_IP_address = '129.94.163.203' # USER INPUT get IP address from mobile hotspot settings 129.94.163.203 for OMB
-    currentVoltagePreAmp_gain = 1E3 # USER INPUT Femto current preamplifier gain
-
-    start_sd = 0.0 # USER INPUT start value for IV sweep
-    end_sd = -0.5 # USER INPUT end value for IV sweep
-    step_sd = 0.1 # USER INPUT step size for IV sweep
+    start_sd = start_end_step[0] # USER INPUT start value for IV sweep
+    end_sd = start_end_step[1] # USER INPUT end value for IV sweep
+    step_sd = start_end_step[2] # USER INPUT step size for IV sweep
     V_SD = U.targetArray([start_sd,end_sd,start_sd],stepsize=step_sd) #creates array of V_sd value for voltage sweep
 
-    # Number of and delay between cycles measuring all devices
-    repeats = 5   # USER INPUT number of IV curves measured per device
     delay = 0 # USER INPUT delay between sets of IV measurements - measure all devices -> delay -> measure all devices
-    basePath  = easygui.diropenbox().replace('\\', '/') # opens window to select folder for data to be saved
-    fileName = 'test' # USER INPUT file name
+    basePath = easygui.diropenbox().replace('\\', '/') # opens window to select folder for data to be saved
 
-    deviceList = [i for i in range(1,47)] # USER INPUT enter all devices you want to measure
+    with open(basePath + '/comments.txt', 'w') as f:
+        f.write('start: ' + str(datetime.now()) + '\n' +
+                'Filename: ' + fileName + '\n' +
+                'Pi IP: ' + Pi_IP_address + '\n' +
+                'repeats = ' + str(repeats) + '\n' +
+                'Pi_IP_address = ' + Pi_IP_address + '\n' +
+                'Preamp gain = ' + str(currentVoltagePreAmp_gain)  + '\n' +
+                'IV start, stop, step = ' + str(start_end_step) + '\n' +
+                'data at: ' + basePath + '\n \n' +
+                'comment = ' + comment + '\n \n'
+                )
 
     # 2.Define device/instruments
     my_Pi = PiMUX(IP = Pi_IP_address) # sets up raspberry pi
@@ -45,7 +57,7 @@ if __name__ == '__main__':
 
     myTime = I.TimeMeas()  # gets time
     Dct = {} # sets up IV sweep including where to save the files
-    Dct['basePath'] = basePath
+    Dct['basePath'] = basePath + '/IV'
     Dct['fileName'] = fileName
     Dct['setters'] = {daqout_S: 'V_SD'}
     Dct['readers'] = {myTime:  'time',
@@ -86,6 +98,25 @@ if __name__ == '__main__':
 
     MasterDF.to_csv(basePath+'/'+fileName+str(Params['ID'])+'.csv') #save final results table with ID of the last sweep.
 
+    Path(basePath + "/devices").mkdir(parents=True, exist_ok=True)
+
     for device in deviceList: # saves result tables for individual devices
         df_ind = MasterDF[MasterDF['device'] == device]
-        df_ind.to_csv(basePath+ '/'+ fileName +'_device_' + str(device)+'.csv')
+        df_ind.to_csv(basePath+ '/devices/'+ fileName + '_device_' + str(device)+'.csv')
+
+    with open(basePath + '/comments.txt', 'a') as f:
+        f.write('measurement finished at ' + str(datetime.now()))
+
+    topDevices = [i for i in range(1, 12 + 1)] + [i for i in range(24, 34 + 1)]
+    bottomDevices = [i for i in range(13, 23 + 1)] + [i for i in range(35, 46 + 1)]
+
+    dfc = MasterDF
+
+    if testSample == 'no':
+        pass
+    elif testSample == '1kOhm_top':
+        dfa = get_G_average(dfc)
+
+
+
+        print(testSample)
