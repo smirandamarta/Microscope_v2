@@ -2,9 +2,10 @@ import pandas as pd
 import easygui
 import matplotlib.pyplot as plt
 
+##################Results DataFrames as Class#######################
+
 class ResultsDF:
-#comment for github
-# Jaccl commits
+
     def __init__(self, name = 'unnamed'):
         self.file = easygui.fileopenbox(default= 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta').replace('\\', '/')
         #self.file = 'C:/Users/marta/OneDrive/Escritorio/Data/20210211/Meas4/MSM01_meas2.csv'
@@ -77,7 +78,7 @@ class ResultsDF:
                 liveList.append(device)
         return(liveList)
 
-###########################################################
+################Functions########################
 
 def plot_all(df, title = 'title'):
     deviceList = df.device.unique()
@@ -101,29 +102,81 @@ def get_G_average(df):
                                       'G_sterr': df1.G.sem()}, ignore_index=True)
     return ResultsDF
 
-def check_values(df, ev = 8.5e-4, tol = 0.1, rel_std = 0.001):
-    #applied should be applied to dataframes resulting from get_G_average
+def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zero_tol = 1e6, zero_std_tol = 1e6):
+    ev = 1/(R_ev+100) #100 ohm internal resistance of multiplexer
+    zero_tol = 1/R_zero_tol
+
     topDevices = [i for i in range(1, 12 + 1)] + [i for i in range(24, 34 + 1)]
     bottomDevices = [i for i in range(13, 23 + 1)] + [i for i in range(35, 46 + 1)]
+    allDevices = topDevices + bottomDevices
+
     dfa = get_G_average(df)
-    # top
-    for device in topDevices:
+
+    G_OK = []
+    noise_OK = []
+    G_bad = []
+    noise_bad = []
+
+    if type == 'top':
+        liveDevices = topDevices
+        deadDevices = bottomDevices
+    elif type == 'bottom':
+        liveDevices = bottomDevices
+        deadDevices = topDevices
+    elif type == 'all':
+        liveDevices = allDevices
+        deadDevices = []
+
+    # check live devices
+    for device in liveDevices:
         G = float(dfa.G[dfa.device == device])
         std = float(dfa.G_std[dfa.device == device])
         if (G*(1+tol) > ev) and (G*(1-tol) < ev):
-            print(str(device) + ' is OK')
+            G_OK.append(device)
         else:
-            print(str(device) + ' is out of range')
-
+            G_bad.append(device)
         if (std/G < rel_std):
-            print(str(device) + ' noise is OK')
+            noise_OK.append(device)
         else:
-            print(str(device) + ' noise is out of range')
+            noise_bad.append(device)
 
+    #print report
+    print('Report for connected devices = ' + str(liveDevices) + '\n' 
+          'G within range for devices: ' + str(G_OK) + '\n'
+          'G out of range for devices: ' + str(G_bad) + '\n'
+          'noise within range for devices: ' + str(noise_OK) + '\n'
+          'noise out of range range for devices: ' + str(noise_bad) + '\n'
+          )
+    # check disconnected devices
+    G_OK = []
+    noise_OK = []
+    G_bad = []
+    noise_bad = []
+    for device in deadDevices:
+        G = float(dfa.G[dfa.device == device])
+        std = float(dfa.G_std[dfa.device == device])
+        if (G < zero_tol) and (G*tol < zero_tol):
+            G_OK.append(device)
+        else:
+            G_bad.append(device)
+        if (std/G < zero_std_tol):
+            noise_OK.append(device)
+        else:
+            noise_bad.append(device)
+
+    if type != 'all':
+        print('Report for disconnected devices = ' + str(deadDevices) + '\n' 
+              'G within range for devices: ' + str(G_OK) + '\n'
+              'G out of range for devices: ' + str(G_bad) + '\n'
+              'noise within range for devices: ' + str(noise_OK) + '\n'
+              'noise out of range range for devices: ' + str(noise_bad) + '\n'
+              )
 
 if __name__ == "__main__":
-    S = ResultsDF('sample_A')
-    print(S.df.head())
+    df = pd.read_csv('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/20210514_test/new5/test.csv')
+    check_values(df)
+    #S = ResultsDF('sample_A')
+    #print(S.df.head())
     #S.plot_all()
     #print(S.get_live_devices())
     #print(S.get_dead_devices())
