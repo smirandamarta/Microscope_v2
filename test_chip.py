@@ -115,17 +115,16 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
     with open(basePath + '/comments.txt', 'a') as f:
         f.write('measurement finished at ' + str(datetime.now()))
 
-    topDevices = [i for i in range(1, 12 + 1)] + [i for i in range(24, 34 + 1)]
-    bottomDevices = [i for i in range(13, 23 + 1)] + [i for i in range(35, 46 + 1)]
-
-    dfc = MasterDF
-
-    if testSample == 'no':
-        pass
-    elif testSample == '1kOhm_top':
-        dfa = get_G_average(dfc)
-
+    return MasterDF, basePath
 
 if __name__ == '__main__':
-    print('hello')
+    comment = 'This is a test'
 
+    df, basePath = micr_measure(repeats=2,
+                 deviceList=[i for i in range(1,47)],
+                 comment=comment)
+
+    dfc = check_values(df, R_ev=100e3, type='bottom', tol=0.1, rel_std=0.005, R_zero_tol=1e6, zero_std_tol=1e6,
+                       save=True, basePath=basePath)
+
+    print('done')

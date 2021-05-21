@@ -102,7 +102,16 @@ def get_G_average(df):
                                       'G_sterr': df1.G.sem()}, ignore_index=True)
     return ResultsDF
 
-def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zero_tol = 1e6, zero_std_tol = 1e6):
+def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zero_tol = 1e6, zero_std_tol = 1e6,
+                 save = False, basePath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/test'):
+
+    completeReport = ('R expected: ' + str(R_ev) + 'Ohm \n' +
+                    'type: ' + str(type) + '\n' +
+                      'tol = ' + str(tol) + '\n' +
+                      'rel std = ' + str(rel_std) + '\n' +
+                      'R_zero_tol = '+ str(R_zero_tol) + '\n' +
+                      'base path = ' + basePath + '\n \n')
+
     ev = 1/(R_ev+100) #100 ohm internal resistance of multiplexer
     zero_tol = 1/R_zero_tol
 
@@ -129,9 +138,9 @@ def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zer
 
     # check live devices
     for device in liveDevices:
-        G = float(dfa.G[dfa.device == device])
-        std = float(dfa.G_std[dfa.device == device])
-        if (G*(1+tol) > ev) and (G*(1-tol) < ev):
+        G = float(dfa.G.loc[dfa.device == device])
+        std = float(dfa.G_std.loc[dfa.device == device])
+        if (G*(1+tol) > ev) & (G*(1-tol) < ev):
             G_OK.append(device)
         else:
             G_bad.append(device)
@@ -140,22 +149,29 @@ def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zer
         else:
             noise_bad.append(device)
 
-    #print report
-    print('Report for connected devices = ' + str(liveDevices) + '\n' 
-          'G within range for devices: ' + str(G_OK) + '\n'
-          'G out of range for devices: ' + str(G_bad) + '\n'
-          'noise within range for devices: ' + str(noise_OK) + '\n'
-          'noise out of range range for devices: ' + str(noise_bad) + '\n'
+    G_a_live = dfa.G[dfa.device.isin(G_OK)].mean()
+    STD_a_live = dfa.G_std[dfa.device.isin(G_OK)].mean()
+
+    report_c = ('G average of devices within range =  ' + str(G_a_live) + ' S \n' +
+              'STD average of devices within range =  ' + str(STD_a_live) + ' S \n \n' +
+              'Report for connected devices = ' + str(liveDevices) + '\n' 
+              'G within range for devices: ' + str(G_OK) + '\n' 
+              'G out of range for devices: ' + str(G_bad) + '\n'
+              'noise within range for devices: ' + str(noise_OK) + '\n'
+              'noise out of range range for devices: ' + str(noise_bad) + '\n \n'
           )
-    # check disconnected devices
+    #print(report_c)
+    #check disconnected devices
+    completeReport = completeReport + report_c
+
     G_OK = []
     noise_OK = []
     G_bad = []
     noise_bad = []
     for device in deadDevices:
-        G = float(dfa.G[dfa.device == device])
-        std = float(dfa.G_std[dfa.device == device])
-        if (G < zero_tol) and (G*tol < zero_tol):
+        G = float(dfa.G.loc[dfa.device == device])
+        std = float(dfa.G_std.loc[dfa.device == device])
+        if (G < zero_tol) & (G*tol < zero_tol):
             G_OK.append(device)
         else:
             G_bad.append(device)
@@ -165,16 +181,39 @@ def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zer
             noise_bad.append(device)
 
     if type != 'all':
-        print('Report for disconnected devices = ' + str(deadDevices) + '\n' 
-              'G within range for devices: ' + str(G_OK) + '\n'
-              'G out of range for devices: ' + str(G_bad) + '\n'
-              'noise within range for devices: ' + str(noise_OK) + '\n'
-              'noise out of range range for devices: ' + str(noise_bad) + '\n'
+        G_a_live = dfa.G[dfa.device.isin(G_OK)].mean()
+        STD_a_live = dfa.G_std[dfa.device.isin(G_OK)].mean()
+        #print('G average of disconnected devices within range =  ' + str(G_a_live) + ' S')
+        #print('STD average of disconnected devices within range =  ' + str(STD_a_live) + ' S')
+
+        report_d = ('G average of disconnected devices within range =  ' + str(G_a_live) + ' S \n'+
+                    'STD average of disconnected devices within range =  ' + str(STD_a_live) + ' S \n \n' +
+                    'Report for disconnected devices = ' + str(deadDevices) + '\n' 
+                    'G within range for devices: ' + str(G_OK) + '\n'
+                    'G out of range for devices: ' + str(G_bad) + '\n'
+                    'noise within range for devices: ' + str(noise_OK) + '\n'
+                    'noise out of range range for devices: ' + str(noise_bad) + '\n'
               )
+        completeReport = completeReport + report_d
+
+    print(completeReport)
+
+
+
+
+    if save == True:
+        dfa.to_csv(basePath + '/dfa.csv')
+        print('saved dfa')
+
+        with open(basePath + '/testchip_summary.txt', 'w') as f:
+            f.write(completeReport)
+
+    return dfa
 
 if __name__ == "__main__":
-    df = pd.read_csv('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/20210514_test/new5/test.csv')
-    check_values(df)
+    print('ok')
+    #df = pd.read_csv('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/20210514_test/new5/test.csv')
+    #dfc = check_values(df)
     #S = ResultsDF('sample_A')
     #print(S.df.head())
     #S.plot_all()

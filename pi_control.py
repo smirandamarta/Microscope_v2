@@ -10,7 +10,7 @@ from gpiozero.pins.pigpio import PiGPIOFactory
 
 class PiMUX:
 
-    def __init__(self, IP = '192.168.137.139'):
+    def __init__(self, IP = '129.94.163.203'):
         self.IP = IP
         self.PiFactory = PiGPIOFactory(host= self.IP)
         self.TruthTable = {0: [0, 0, 0, 0, 0, 0, 0, 0], #OFF
@@ -93,6 +93,6 @@ class PiMUX:
 
 if __name__ == "__main__": # execute only if this script is run , not when it's being imported\
     my_pi = PiMUX()
-    my_pi.setMuxToOutput(46)
+    my_pi.setMuxToOutput(0)
 
 
