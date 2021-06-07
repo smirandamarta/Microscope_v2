@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import easygui
 from datetime import datetime
 from pathlib import Path
+from matplotlib.pyplot import cm
 from eval import *
 
 
@@ -72,9 +73,14 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
     # Starting the measurement
     addlegend = True  # variable used to make sure the legend only gets added once to realtime plot
     linestyles = ['-', '--', '-.', ':']  # list used to altenate between line styles for different devices
+    centimetre = 1 / 2.54
+    color = iter(cm.tab20(np.linspace(0, 1, len(deviceList))))
+
+    fig, ax1 = plt.subplots(figsize=(30 * centimetre, 20 * centimetre))
+    plt.subplots_adjust(left=None, bottom=None, right=0.8, top=None, wspace=None, hspace=None)
 
     for j in range(repeats):
-        for device in deviceList:
+        for i, device in enumerate(deviceList):
             my_Pi.setMuxToOutput(device)  # sets multiplexer to the desired device
             time.sleep(0.5)  # short wait to settle. May not be necessary. Can investigate later
             time_1 = time.time() - t0  # Gets time relative to start time of the measurement
@@ -85,16 +91,15 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
             print(str(Params['ID']) + ' + ' + str(j))  # prints status to console
             MasterDF = jan.merge(Params, jan.fit_for_Master(df, 'V_SD', 'I_SD'),
                                  MasterDF)  # Performs linear fit of IV sweep to get G and adds G to result table
-            df1 = MasterDF[MasterDF[
-                               'device'] == device]  # creates dataframe with just one device to plot as a distinct line in live plot
+            df1 = MasterDF[MasterDF['device'] == device]  # creates dataframe with just one device to plot as a distinct line in live plot
             # live plotting. Adding legend on first repeat zero
             if addlegend == True:
-                plt.plot(df1['time'], df1['G'], color='C' + str(device), label=device,
-                         linestyle=linestyles[device % 4 - 1])
-                plt.legend()
+                ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+                ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
+
             elif addlegend == False:
-                plt.plot(df1['time'], df1['G'], color='C' + str(device), label=device,
-                         linestyle=linestyles[device % 4 - 1])
+                ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+
             plt.pause(0.01)  # needed for live plotting to work
         addlegend = False
         time.sleep(delay)  # delay set by user input
@@ -106,6 +111,8 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
     MasterDF.to_csv(
         basePath + '/' + fileName + str(Params['ID']) + '.csv')  # save final results table with ID of the last sweep.
 
+    dfa = get_G_average(MasterDF)
+
     Path(basePath + "/devices").mkdir(parents=True, exist_ok=True)
 
     for device in deviceList:  # saves result tables for individual devices
@@ -113,7 +120,9 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
         df_ind.to_csv(basePath + '/devices/' + fileName + '_device_' + str(device) + '.csv')
 
     with open(basePath + '/comments.txt', 'a') as f:
-        f.write('measurement finished at ' + str(datetime.now()))
+        f.write('average values: \n' + dfa.to_string() + '\n \n' + 'measurement finished at ' + str(datetime.now()))
+
+    plot_all(MasterDF, title=fileName, save=True, basepath=basePath)
 
     return MasterDF, basePath
 

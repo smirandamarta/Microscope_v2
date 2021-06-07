@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 import easygui
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 
 ##################Results DataFrames as Class#######################
 
@@ -80,17 +82,59 @@ class ResultsDF:
 
 ################Functions########################
 
-def plot_all(df, title = 'title'):
+def get_live_devices(df, cutoff = 5e-6):
     deviceList = df.device.unique()
-    linestyles = ['-', '--', '-.', ':']
-    #plt.figure(num = str(self.name)+'_all')
-    plt.title(title)
-    plt.xlabel('time (s)')
-    plt.ylabel('G (S)')
+    liveList = []
     for device in deviceList:
         df1 = df[df['device'] == device]
-        plt.plot(df1['time'], df1['G'], color='C' + str(device), label=device, linestyle=linestyles[device % 4 - 1])
-        plt.legend()
+        if df1['G'].max() > cutoff:
+            liveList.append(device)
+    return(liveList)
+
+def get_dead_devices(df, cutoff = 5e-6):
+    deviceList = df.device.unique()
+    deadList = []
+    for device in deviceList:
+        df1 = df[df['device'] == device]
+        if df1['G'].max() < cutoff:
+            deadList.append(device)
+    return(deadList)
+
+def plot_all(df, title = 'sample name', cutoff = 1E-5, save = False, basepath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/test'):
+    #deviceList = df.device.unique()
+    dfa = get_G_average(df)
+
+    liveDevices = get_live_devices(df, cutoff=cutoff)
+    deadDevices = get_dead_devices(df, cutoff=cutoff)
+
+    linestyles = ['-', '--', '-.', ':']
+    plt.style.use('seaborn')
+    centimetre = 1 / 2.54
+    color = iter(cm.tab20(np.linspace(0, 1, len(liveDevices)))) #change 46 to i
+
+    fig, ax1 = plt.subplots(figsize=(30*centimetre, 20*centimetre))
+    plt.subplots_adjust(left=None, bottom=None, right=0.8, top=None, wspace=None, hspace=None)
+
+    G_mean = dfa.G[dfa.device.isin(liveDevices)].mean()
+    G_std = dfa.G_std[dfa.device.isin(liveDevices)].mean()
+    add_text = 'G_mean_live = ' + '{:.2E}'.format(G_mean) + '\n' + 'G_mean_std_live = ' + '{:.2E}'.format(G_std)
+    ax1.text(1.03, 0.0, add_text, transform=ax1.transAxes)
+
+    ax1.set_title(title)
+    ax1.set(xlabel = 'time (s)', ylabel='G (S)')
+    for i, device in enumerate(liveDevices):
+        df1 = df[df['device'] == device]
+        ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+        ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
+
+    for device in deadDevices:
+        df1 = df[df['device'] == device]
+        ax1.plot(df1['time'], df1['G'], color= 'gray', label=device, linestyle='-')
+        ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
+
+    if save == True:
+        save_at = basepath + '/summary.png'
+        fig.savefig(save_at)
 
 def get_G_average(df):
     deviceList = df.device.unique()
