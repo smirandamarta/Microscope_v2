@@ -242,9 +242,6 @@ def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zer
 
     print(completeReport)
 
-
-
-
     if save == True:
         dfa.to_csv(basePath + '/dfa.csv')
         print('saved dfa')
@@ -254,13 +251,14 @@ def check_values(df, R_ev = 1e3, type = 'top', tol = 0.1, rel_std = 0.005, R_zer
 
     return dfa
 
+def check_noise(df, basePath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/test'):
+    dfa = get_G_average(df)
+    print(dfa.G_std.mean())
+    #return (dfa.G_std)
+
 if __name__ == "__main__":
     print('ok')
-    #df = pd.read_csv('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/20210514_test/new5/test.csv')
-    #dfc = check_values(df)
-    #S = ResultsDF('sample_A')
-    #print(S.df.head())
-    #S.plot_all()
+
     #print(S.get_live_devices())
     #print(S.get_dead_devices())
     #for github

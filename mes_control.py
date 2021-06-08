@@ -22,10 +22,10 @@ if __name__ == '__main__':
     V_SD = U.targetArray([start_sd,end_sd,start_sd],stepsize=step_sd) #creates array of V_sd value for voltage sweep
 
     # Number of and delay between cycles measuring all devices
-    repeats = 5   # USER INPUT number of IV curves measured per device
+    repeats = 20   # USER INPUT number of IV curves measured per device
     delay = 0 # USER INPUT delay between sets of IV measurements - measure all devices -> delay -> measure all devices
     basePath  = easygui.diropenbox().replace('\\', '/') # opens window to select folder for data to be saved
-    fileName = 'test' # USER INPUT file name
+    fileName = 'MSM04_realbufferpH7_topH4' # USER INPUT file name
 
     deviceList = [i for i in range(1,47)] # USER INPUT enter all devices you want to measure
 

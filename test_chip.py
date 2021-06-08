@@ -10,6 +10,7 @@ import easygui
 from datetime import datetime
 from pathlib import Path
 from matplotlib.pyplot import cm
+import numpy as np
 from eval import *
 
 
@@ -75,6 +76,7 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
     linestyles = ['-', '--', '-.', ':']  # list used to altenate between line styles for different devices
     centimetre = 1 / 2.54
     color = iter(cm.tab20(np.linspace(0, 1, len(deviceList))))
+    colors = [i for i in color]
 
     fig, ax1 = plt.subplots(figsize=(30 * centimetre, 20 * centimetre))
     plt.subplots_adjust(left=None, bottom=None, right=0.8, top=None, wspace=None, hspace=None)
@@ -94,11 +96,11 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
             df1 = MasterDF[MasterDF['device'] == device]  # creates dataframe with just one device to plot as a distinct line in live plot
             # live plotting. Adding legend on first repeat zero
             if addlegend == True:
-                ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+                ax1.plot(df1['time'], df1['G'], color= colors[i % len(deviceList)], label=device, linestyle=linestyles[i % 4 - 1])
                 ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
 
             elif addlegend == False:
-                ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+                ax1.plot(df1['time'], df1['G'], color= colors[i % len(deviceList)], label=device, linestyle=linestyles[i % 4 - 1])
 
             plt.pause(0.01)  # needed for live plotting to work
         addlegend = False
@@ -129,11 +131,8 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
 if __name__ == '__main__':
     comment = 'This is a test'
 
-    df, basePath = micr_measure(repeats=2,
-                 deviceList=[i for i in range(1,47)],
+    df, basePath = micr_measure(repeats=5,
+                 deviceList=[2,3,13,16,23],
                  comment=comment)
-
-    dfc = check_values(df, R_ev=100e3, type='bottom', tol=0.1, rel_std=0.005, R_zero_tol=1e6, zero_std_tol=1e6,
-                       save=True, basePath=basePath)
 
     print('done')
