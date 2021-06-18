@@ -21,8 +21,17 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
                  currentVoltagePreAmp_gain=1E3,
                  start_end_step=[0, -0.5, 0.1],
                  comment='no comment',
-                 testSample='no'
+                 testSample='no',
+                 plotdelay=5
                  ):
+    stop_text = """If you want to shut down the program early, 
+    go to G:\\Shared drives\\Nanoelectronics Team Drive\\Data\\2021\\Marta\\Stop button 
+    open the \'stop\' file and replace this text with \'stop\'. Then save and close the file. 
+    The program will shut down when it finishes the current repeat."""
+
+    with open('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/Stop button/stop.txt', 'w') as f:
+        f.write(stop_text)
+
     start_sd = start_end_step[0]  # USER INPUT start value for IV sweep
     end_sd = start_end_step[1]  # USER INPUT end value for IV sweep
     step_sd = start_end_step[2]  # USER INPUT step size for IV sweep
@@ -106,6 +115,14 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
         addlegend = False
         time.sleep(delay)  # delay set by user input
 
+        with open('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/Stop button/stop.txt', 'r') as f:
+            r = f.read()
+        if r == 'stop':
+            print('stop')
+            with open(basePath + '/comments.txt', 'a') as c:
+                c.write('\n\n---------measurement was ended using stop.txt---------\n\n')
+            break
+
     my_Pi.setMuxToOutput(0)  # sets multiplexer to 0
 
     MasterDF.to_csv(basePath + '/' + fileName + '.csv')  # save results table after each repeat
@@ -131,8 +148,8 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
 if __name__ == '__main__':
     comment = 'This is a test'
 
-    df, basePath = micr_measure(repeats=5,
-                 deviceList=[2,3,13,16,23],
+    df, basePath = micr_measure(repeats=10,
+                 deviceList=[i for i in range(10)],
                  comment=comment)
 
     print('done')
