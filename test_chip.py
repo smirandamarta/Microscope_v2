@@ -13,7 +13,6 @@ from matplotlib.pyplot import cm
 import numpy as np
 from eval import *
 
-
 def micr_measure(deviceList=[i for i in range(1, 47)],
                  fileName='test',
                  repeats=5,

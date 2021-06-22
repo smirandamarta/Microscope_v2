@@ -100,7 +100,7 @@ def get_dead_devices(df, cutoff = 5e-6):
             deadList.append(device)
     return(deadList)
 
-def plot_all(df, title = 'MSM04', cutoff = 1E-5, save = True, basepath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/Noise measurements - June 1st week/Fishtank/MSM04_realbufferpH7_topH4'):
+def plot_all(df, title = 'sample name', cutoff = 1E-5, save = False, basepath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/test'):
     #deviceList = df.device.unique()
     dfa = get_G_average(df)
 
@@ -257,10 +257,8 @@ def check_noise(df, basePath = 'G:/Shared drives/Nanoelectronics Team Drive/Data
     #return (dfa.G_std)
 
 if __name__ == "__main__":
-    S = ResultsDF()
-    S.plot_all()
     print('ok')
 
-
-   #print(S.get_dead_devices())
+    #print(S.get_live_devices())
+    #print(S.get_dead_devices())
     #for github
