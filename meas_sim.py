@@ -110,5 +110,8 @@ def simulate_measurement(deviceList=[i for i in range(10)], repeats = 1, delay =
     return MasterDF
 
 if __name__ == '__main__':
-    df = simulate_measurement(repeats=5, delay= 0.1, plot_speed=5)
+    t0 = time.time()
+    df = simulate_measurement(repeats=10, delay= 0.1, plot_speed=5)
+    t1 = time.time()
+    print(t1-t0)
     plot_all(df)

@@ -100,7 +100,7 @@ def get_dead_devices(df, cutoff = 5e-6):
             deadList.append(device)
     return(deadList)
 
-def plot_all(df, title = 'sample name', cutoff = 1E-5, save = False, basepath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/test'):
+def plot_all(df, title = 'MSM04', cutoff = 1E-5, save = True, basepath = 'G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/Noise measurements - June 1st week/Fishtank/MSM04_realbufferpH7_topH4'):
     #deviceList = df.device.unique()
     dfa = get_G_average(df)
 
@@ -256,9 +256,58 @@ def check_noise(df, basePath = 'G:/Shared drives/Nanoelectronics Team Drive/Data
     print(dfa.G_std.mean())
     #return (dfa.G_std)
 
+def plot_all_live_add_legend(ax1):
+    ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
+    print('added legend')
+
+def plot_all_live(df, deviceList, fig, ax1, title='sample name', cutoff=1E-5, label=False):
+
+        legend = False
+        first_legend = True
+        if deviceList == list(df.device) and first_legend == True:
+            legend = True
+
+        dfa = get_G_average(df)
+
+        liveDevices = get_live_devices(df, cutoff=cutoff)
+        deadDevices = get_dead_devices(df, cutoff=cutoff)
+
+        linestyles = ['-', '--', '-.', ':']
+        color = iter(cm.tab20(np.linspace(0, 1, len(liveDevices))))  # change 46 to i
+
+        G_mean = dfa.G[dfa.device.isin(liveDevices)].mean()
+        G_std = dfa.G_std[dfa.device.isin(liveDevices)].mean()
+        add_text = 'G_mean_live = ' + '{:.2E}'.format(G_mean) + '\n' + 'G_mean_std_live = ' + '{:.2E}'.format(G_std)
+        t1 = ax1.text(1.03, 0.0, add_text, transform=ax1.transAxes)
+        t1.set_text(str(add_text))
+
+        ax1.set_title(title)
+        ax1.set(xlabel='time (s)', ylabel='G (S)')
+
+        for i, device in enumerate(liveDevices):
+            df1 = df[df['device'] == device]
+            if label == True:
+                ax1.plot(df1['time'], df1['G'], color=next(color), label=device, linestyle=linestyles[i % 4 - 1])
+            if label == False:
+                ax1.plot(df1['time'], df1['G'], color=next(color), linestyle=linestyles[i % 4 - 1])
+
+
+        for device in deadDevices:
+            df1 = df[df['device'] == device]
+            if label == True:
+                ax1.plot(df1['time'], df1['G'], color='gray', label=device, linestyle='-')
+            if label == False:
+                ax1.plot(df1['time'], df1['G'], color='gray', linestyle='-')
+
+        legend = False
+
+        plt.pause(0.01)  # needed for live plotting to work
+        return legend
+
 if __name__ == "__main__":
+
     print('ok')
 
-    #print(S.get_live_devices())
-    #print(S.get_dead_devices())
+
+   #print(S.get_dead_devices())
     #for github

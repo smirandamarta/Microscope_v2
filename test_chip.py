@@ -15,13 +15,13 @@ from eval import *
 
 def micr_measure(deviceList=[i for i in range(1, 47)],
                  fileName='test',
-                 repeats=5,
+                 repeats=3,
                  Pi_IP_address='129.94.163.203',
                  currentVoltagePreAmp_gain=1E3,
                  start_end_step=[0, -0.5, 0.1],
                  comment='no comment',
                  testSample='no',
-                 plotdelay=5
+                 plot_speed=1
                  ):
     stop_text = """If you want to shut down the program early, 
     go to G:\\Shared drives\\Nanoelectronics Team Drive\\Data\\2021\\Marta\\Stop button 
@@ -39,6 +39,8 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
 
     delay = 0  # USER INPUT delay between sets of IV measurements - measure all devices -> delay -> measure all devices
     basePath = easygui.diropenbox().replace('\\', '/')  # opens window to select folder for data to be saved
+
+    add_legend = True
 
     with open(basePath + '/comments.txt', 'w') as f:
         f.write('start: ' + str(datetime.now()) + '\n' +
@@ -103,15 +105,18 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
                                  MasterDF)  # Performs linear fit of IV sweep to get G and adds G to result table
             df1 = MasterDF[MasterDF['device'] == device]  # creates dataframe with just one device to plot as a distinct line in live plot
             # live plotting. Adding legend on first repeat zero
-            if addlegend == True:
-                ax1.plot(df1['time'], df1['G'], color= colors[i % len(deviceList)], label=device, linestyle=linestyles[i % 4 - 1])
-                ax1.legend(ncol=2, loc=9, bbox_to_anchor=(1.13, 1.0))
+            if i%plot_speed == 0:
+                if len(MasterDF.device.unique()) < len(deviceList):
+                    plot_all_live(MasterDF, deviceList=deviceList, fig=fig, ax1=ax1, label=False)
+                else:
+                    plot_all_live(MasterDF, deviceList=deviceList, fig=fig, ax1=ax1, label=True)
 
-            elif addlegend == False:
-                ax1.plot(df1['time'], df1['G'], color= colors[i % len(deviceList)], label=device, linestyle=linestyles[i % 4 - 1])
+                    if add_legend == True:
+                        plot_all_live_add_legend(ax1)
+                        add_legend = False
 
             plt.pause(0.01)  # needed for live plotting to work
-        addlegend = False
+        #addlegend = False
         time.sleep(delay)  # delay set by user input
 
         with open('G:/Shared drives/Nanoelectronics Team Drive/Data/2021/Marta/Stop button/stop.txt', 'r') as f:
@@ -145,10 +150,15 @@ def micr_measure(deviceList=[i for i in range(1, 47)],
     return MasterDF, basePath
 
 if __name__ == '__main__':
-    comment = 'This is a test'
+    comment = 'working out preamp issues'
 
-    df, basePath = micr_measure(repeats=10,
-                 deviceList=[i for i in range(10)],
-                 comment=comment)
+    t0 = time.time()
 
-    print('done')
+    df, basePath = micr_measure(repeats=5, currentVoltagePreAmp_gain=1E3,
+                 deviceList=[i for i in range(35,45)],
+                 comment=comment,
+                 plot_speed=5)
+
+    t1 = time.time()
+
+    print(t1-t0)

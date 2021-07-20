@@ -5,9 +5,9 @@ comment = 'GS, FBW, DC GND, no filter, amp 1E5 with preamp'
 R_ev = 1e3
 type = 'all' # top, bottom, all
 
-df, basePath = micr_measure(repeats=20,
+df, basePath = micr_measure(repeats=2,
                             fileName=fileName,
-                            currentVoltagePreAmp_gain=1E5,
+                            currentVoltagePreAmp_gain=1E3,
                             deviceList=[i for i in range(1,47)],
                             comment=comment)
 
